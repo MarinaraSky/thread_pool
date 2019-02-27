@@ -36,6 +36,11 @@ t_pool *init_t_pool(uint64_t numOfThreads)
 		exit(2);
 	}
 	sem_init(&pool->mySem, 0, 0);
+	if(pthread_mutex_init(&pool->lock, NULL) != 0)
+	{
+		fprintf(stderr, "Failed mutex initialization\n");
+		exit(7);
+	}
 	pool->queue = init_jobs();
 	for(uint64_t i = 0; i < numOfThreads; i++)
 	{
@@ -74,7 +79,9 @@ void working(args *create)
 		printf("%lu: Waiting turn\n", curThread.id);
 		sem_wait(&create->pool->mySem);
 		create->pool->working++;
+		pthread_mutex_lock(&create->pool->lock);
 		uint64_t job = get_job(create->pool->queue);
+		pthread_mutex_unlock(&create->pool->lock);
 		printf("%lu: My turn\n", job);
 		create->pool->working--;
 	}
@@ -85,6 +92,7 @@ void working(args *create)
 void destroy_t_pool(t_pool *pool)
 {
 	sem_destroy(&pool->mySem);
+	pthread_mutex_destroy(&pool->lock);
 	free(pool->threads);
 	free(pool);
 }

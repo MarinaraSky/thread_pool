@@ -27,6 +27,7 @@ typedef struct t_pool
 	uint64_t total;
 	sem_t mySem;
 	queue_t *queue;
+	pthread_mutex_t lock;
 }t_pool;
 
 
